@@ -1,0 +1,1 @@
+A repository for homework assignments for the M&CS c++ programming course.
