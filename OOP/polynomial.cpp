@@ -9,17 +9,21 @@ public:
     Polynom();
     Polynom(int an);
     Polynom(int an, double* cfs);
-    Polynom(const Polynom&); 
+    Polynom(const Polynom&);
     ~Polynom();
     double& coef(int); 
+    double value(double);
+    Polynom int_cast(int);
     Polynom operator+(const Polynom&);   
     Polynom operator-(const Polynom&);   
     Polynom operator*(const Polynom&);
+    Polynom& operator=(const Polynom&);
     friend ostream& operator<< (ostream& s, const Polynom& c); 
     friend istream& operator >> (istream& s, Polynom& c); 
 };
 
 Polynom::Polynom(){
+    size = 0;
     coefs = new double[1];
     coefs[0] = 0;
     cout << "constructor 0 " << this << endl;
@@ -65,6 +69,22 @@ double& Polynom::coef(int i){
     return c;
 }
 
+double Polynom::value(double x) {
+    double carry = 1;
+    double res = 0;
+    for (int i = 0; i <= size; i++) {
+        res += coefs[i] * carry;
+        carry *= x;
+    }
+    return res;
+}
+
+Polynom int_cast(int x) {
+    double cfs[1] = { x };
+    Polynom res = Polynom(0, cfs);
+    return res;
+}
+
 Polynom Polynom::operator-(const Polynom& t){
     Polynom Z(max(size, t.size));
     if (size >= t.size){
@@ -76,7 +96,7 @@ Polynom Polynom::operator-(const Polynom& t){
             Z.coefs[i] = -t.coefs[i] + coefs[i];
         for (int i = size + 1; i <= t.size; i++)
             Z.coefs[i] = -t.coefs[i];
-        return Polynom(Z.size, Z.coefs);
+        return Z;
     }
 }
 
@@ -103,7 +123,18 @@ Polynom Polynom::operator*(const Polynom& t){
     for (int i = 0; i <= size; i++)
         for (int j = 0; j <= t.size; j++)
             Y.coefs[i + j] += coefs[i] * t.coefs[j];
-    return Polynom(Y.size, Y.coefs);
+    return Y;
+}
+
+Polynom& Polynom::operator=(const Polynom& p) // ÐºÐ¾Ð½ÑÑ‚Ñ€ÑƒÐºÑ‚Ð¾Ñ€ ÐºÐ¾Ð¿Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ñ
+{
+    if (this == &p)
+        return *this;
+    size = p.size;
+    coefs = new double[size + 1];
+    for (int i = 0; i <= size; i++)
+        coefs[i] = p.coefs[i];
+    return *this;
 }
 
 istream& operator>>(istream& s, Polynom& c){
@@ -152,17 +183,18 @@ int main()
 {
     setlocale(LC_ALL, "");
     int n, m;
-    cout << "Ââåäèòå ñòåïåíü ïîëèíîìà A è ñòåïåíü ïîëèíîìà B:" << '\n';
+    cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ ÑÑ‚ÐµÐ¿ÐµÐ½ÑŒ Ð¿Ð¾Ð»Ð¸Ð½Ð¾Ð¼Ð° A Ð¸ ÑÑ‚ÐµÐ¿ÐµÐ½ÑŒ Ð¿Ð¾Ð»Ð¸Ð½Ð¾Ð¼Ð° B:" << '\n';
     cin >> n >> m;
-    Polynom A(n), B(m);
-    cout << "Ââåäèòå êîýôèöèåíòû ïîëèíîìà A:" << '\n';
+    Polynom A(n), B(m), D;
+    cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ ÐºÐ¾ÑÑ„Ð¸Ñ†Ð¸ÐµÐ½Ñ‚Ñ‹ Ð¿Ð¾Ð»Ð¸Ð½Ð¾Ð¼Ð° A:" << '\n';
     cin >> A;
-    cout << "Ââåäèòå êîýôèöèåíòû ïîëèíîìà B:" << '\n';
+    cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ ÐºÐ¾ÑÑ„Ð¸Ñ†Ð¸ÐµÐ½Ñ‚Ñ‹ Ð¿Ð¾Ð»Ð¸Ð½Ð¾Ð¼Ð° B:" << '\n';
     cin >> B;
-    cout << setw(17) << "Ìíîãî÷ëåí À:" << setw(5) << A << '\n';
-    cout << setw(17) << "Ìíîãî÷ëåí B:" << setw(5) << B << '\n';
-    cout << setw(17) << "Ìíîãî÷ëåí D=A+B:" << setw(5) << A + B << '\n';
-    //cout << setw(17) << "Ìíîãî÷ëåí K=A-B:" << setw(5) << (K = A - B) << '\n';
-    //cout << setw(17) << "Ìíîãî÷ëåí K=A-B:" << setw(5) << (Y = A * B) << '\n';
+    cout << setw(17) << "ÐœÐ½Ð¾Ð³Ð¾Ñ‡Ð»ÐµÐ½ Ð:" << setw(5) << A << '\n';
+    cout << setw(17) << "ÐœÐ½Ð¾Ð³Ð¾Ñ‡Ð»ÐµÐ½ B:" << setw(5) << B << '\n';
+    cout << setw(17) << "ÐœÐ½Ð¾Ð³Ð¾Ñ‡Ð»ÐµÐ½ D=A+B:" << setw(5) << (D = A + B) << '\n';
+    cout << setw(17) << "ÐœÐ½Ð¾Ð³Ð¾Ñ‡Ð»ÐµÐ½ A+B:" << setw(5) << (A + B) << '\n';
+    //cout << setw(17) << "ÐœÐ½Ð¾Ð³Ð¾Ñ‡Ð»ÐµÐ½ K=A-B:" << setw(5) << (K = A - B) << '\n';
+    //cout << setw(17) << "ÐœÐ½Ð¾Ð³Ð¾Ñ‡Ð»ÐµÐ½ K=A-B:" << setw(5) << (Y = A * B) << '\n';
     return 0;
 }
