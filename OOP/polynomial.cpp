@@ -1,6 +1,8 @@
 #include<iostream>
 #include<iomanip>
 #include<fstream>
+#include<initializer_list>
+
 using namespace std;
 class Polynom{
     int size = 0; 
@@ -10,23 +12,28 @@ public:
     Polynom(int an);
     Polynom(int an, double* cfs);
     Polynom(const Polynom&);
+    Polynom(Polynom&&);
+    Polynom(initializer_list<double>);
     ~Polynom();
-    double& coef(int); 
-    double value(double);
-    Polynom int_cast(int);
-    Polynom operator+(const Polynom&);   
-    Polynom operator-(const Polynom&);   
-    Polynom operator*(const Polynom&);
-    Polynom& operator=(const Polynom&);
+    double& coef(int) const; 
+    double value(double) const;
+    Polynom int_cast(int) const;
+    Polynom operator+(const Polynom&) const;   
+    Polynom operator-(const Polynom&) const;   
+    Polynom operator*(const Polynom&) const;
+    Polynom& operator=(Polynom&);
+    Polynom& operator=(Polynom&&);
+    double operator()(double) const;
+    double& operator[] (int);
     friend ostream& operator<< (ostream& s, const Polynom& c); 
-    friend istream& operator >> (istream& s, Polynom& c); 
+    friend istream& operator >> (istream& s, const Polynom& c); 
 };
 
 Polynom::Polynom(){
     size = 0;
     coefs = new double[1];
     coefs[0] = 0;
-    cout << "constructor 0 " << this << endl;
+    //cout << "constructor 0 " << this << endl;
 }
 
 Polynom::Polynom(int an){
@@ -35,7 +42,7 @@ Polynom::Polynom(int an){
     for (int i = 0; i <= size; i++){
         coefs[i] = 0;
     }
-    cout << "constructor 1 " << this << endl;
+    //cout << "constructor 1 " << this << endl;
 }
 
 Polynom::Polynom(int n, double* cfs) {
@@ -44,11 +51,11 @@ Polynom::Polynom(int n, double* cfs) {
     for (int i = 0; i <= size; i++) {
         coefs[i] = 0;
     }
-    cout << "constructor 2 " << this << endl;
+    //cout << "constructor 2 " << this << endl;
 }
 
 Polynom::~Polynom(){
-    cout << "destructor " << this << endl;
+    //cout << "destructor " << this << endl;
     delete[]coefs;
 }
 
@@ -57,10 +64,21 @@ Polynom::Polynom(const Polynom& f){
     coefs = new double[size + 1];
     for (int i = 0; i <= size; i++)
         coefs[i] = f.coefs[i];
-    cout << "constructor copy" << endl;
+    //cout << "constructor copy" << endl;
 }
 
-double& Polynom::coef(int i){
+Polynom::Polynom(Polynom && x) : coefs(x.coefs), size(x.size){
+    x.coefs = nullptr;
+    x.size = 0;
+}
+
+Polynom::Polynom(initializer_list<double> s) {
+    size = s.size() - 1;
+    coefs = new double[size+1];
+    copy(s.begin(), s.end(), coefs);
+}
+
+double& Polynom::coef(int i) const{
     static double c = -1;
     if (i <= size)
         return coefs[i];
@@ -69,7 +87,7 @@ double& Polynom::coef(int i){
     return c;
 }
 
-double Polynom::value(double x) {
+double Polynom::operator()(double x) const {
     double carry = 1;
     double res = 0;
     for (int i = 0; i <= size; i++) {
@@ -85,7 +103,7 @@ Polynom int_cast(int x) {
     return res;
 }
 
-Polynom Polynom::operator-(const Polynom& t){
+Polynom Polynom::operator-(const Polynom& t) const{
     Polynom Z(max(size, t.size));
     if (size >= t.size){
         for (int i = 0; i <= t.size; i++)
@@ -100,7 +118,7 @@ Polynom Polynom::operator-(const Polynom& t){
     }
 }
 
-Polynom Polynom::operator+(const Polynom& t)
+Polynom Polynom::operator+(const Polynom& t) const
 {
     Polynom Z(max(size, t.size));
     if (size >= t.size){
@@ -118,7 +136,7 @@ Polynom Polynom::operator+(const Polynom& t)
     return Z;
 }
 
-Polynom Polynom::operator*(const Polynom& t){
+Polynom Polynom::operator*(const Polynom& t) const{
     Polynom Y(size + t.size);
     for (int i = 0; i <= size; i++)
         for (int j = 0; j <= t.size; j++)
@@ -126,8 +144,7 @@ Polynom Polynom::operator*(const Polynom& t){
     return Y;
 }
 
-Polynom& Polynom::operator=(const Polynom& p) // конструктор копирования
-{
+Polynom& Polynom::operator=(Polynom& p){ // конструктор копирования
     if (this == &p)
         return *this;
     size = p.size;
@@ -137,7 +154,17 @@ Polynom& Polynom::operator=(const Polynom& p) // конструктор копи
     return *this;
 }
 
-istream& operator>>(istream& s, Polynom& c){
+Polynom& Polynom::operator=(Polynom &&p) { // перемещающая операция копирования
+    size = p.size;
+    swap(coefs, p.coefs);
+    return *this;
+}
+
+double& Polynom::operator[] (int i) {
+    return coefs[i];
+}
+
+istream& operator>>(istream& s, const Polynom& c){
     for (int i = 0; i <= c.size; i++){
         s >> c.coefs[i];
     }
@@ -182,19 +209,16 @@ ostream& operator<<(ostream& s, const Polynom& c)
 int main()
 {
     setlocale(LC_ALL, "");
-    int n, m;
-    cout << "Введите степень полинома A и степень полинома B:" << '\n';
-    cin >> n >> m;
-    Polynom A(n), B(m), D;
-    cout << "Введите коэфициенты полинома A:" << '\n';
-    cin >> A;
-    cout << "Введите коэфициенты полинома B:" << '\n';
-    cin >> B;
+    Polynom A = { 1, 2 };
+    Polynom B = { 1, 2, 1 }, D, K;
     cout << setw(17) << "Многочлен А:" << setw(5) << A << '\n';
     cout << setw(17) << "Многочлен B:" << setw(5) << B << '\n';
-    cout << setw(17) << "Многочлен D=A+B:" << setw(5) << (D = A + B) << '\n';
+    cout << setw(17) << "Многочлен D=A+B:" << setw(5) << (D = move(A + B)) << '\n';
     cout << setw(17) << "Многочлен A+B:" << setw(5) << (A + B) << '\n';
-    //cout << setw(17) << "Многочлен K=A-B:" << setw(5) << (K = A - B) << '\n';
+    cout << setw(17) << "Многочлен A*B:" << setw(5) << (A * B) << '\n';
+    cout << setw(17) << "Многочлен K=:" << setw(5) << (K = move(B)) << endl;
+    cout << setw(17) << "B[2] = " << B[2] <<  '\n';
+    cout << setw(17) << "K(1.5) = " << setw(5) <<  K(1.5) << '\n';
     //cout << setw(17) << "Многочлен K=A-B:" << setw(5) << (Y = A * B) << '\n';
     return 0;
 }
